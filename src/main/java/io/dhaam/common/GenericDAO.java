@@ -6,11 +6,14 @@ import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
+import javax.persistence.Query;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -73,6 +76,22 @@ public class GenericDAO<T, ID extends Serializable> implements AbstractDAO<T, ID
   @Override
   public void delete(Iterable<? extends T> entities) {
     entities.forEach(this::delete);
+  }
+
+  @Override
+  @SuppressWarnings("unchecked")
+  public Optional<T> findOneByQuery(String queryName, Map<String, Object> parameters) {
+    Query query = getEntityManager().createNamedQuery(queryName);
+
+    for (Map.Entry<String, Object> entry : parameters.entrySet()) {
+      query.setParameter(entry.getKey(), entry.getValue());
+    }
+
+    try {
+      return Optional.of((T) query.getSingleResult());
+    } catch (NoResultException e) {
+      return Optional.empty();
+    }
   }
 
   protected EntityManager getEntityManager() {

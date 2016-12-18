@@ -9,6 +9,7 @@ import java.util.Optional;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -25,6 +26,7 @@ import io.dhaam.vikrant.entity.Tuple;
 @Path("/ping")
 @Produces(MediaType.APPLICATION_JSON)
 @Singleton
+@Transactional
 public class PingResource {
 
   private final CacheDAO cacheDAO;
@@ -37,7 +39,6 @@ public class PingResource {
 
   @GET
   @Timed
-  @Transactional
   public String ping(@QueryParam("key") String key) {
     Optional<Tuple> tupleOptional = this.cacheDAO.findOne(key);
     if (tupleOptional.isPresent()) {
@@ -45,5 +46,24 @@ public class PingResource {
     } else {
       return "dummy";
     }
+  }
+
+  @Path("item")
+  @GET
+  @Timed
+  public String pingItem(@QueryParam("item") String item) {
+    Optional<Tuple> tupleOptional = this.cacheDAO.findKey(item);
+    if (tupleOptional.isPresent()) {
+      return tupleOptional.get().getItem();
+    } else {
+      return "dummy";
+    }
+  }
+
+  @POST
+  @Timed
+  public String ping(@QueryParam("key") String key, @QueryParam("item") String item) {
+    cacheDAO.persist(new Tuple(key, item));
+    return key;
   }
 }

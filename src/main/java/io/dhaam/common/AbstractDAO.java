@@ -2,6 +2,7 @@ package io.dhaam.common;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -10,19 +11,21 @@ import java.util.Optional;
  */
 
 public interface AbstractDAO<T, ID extends Serializable> {
-    void persist(T entity);
+  void persist(T entity);
 
-    void persist(Iterable<? extends T> entities);
+  void persist(Iterable<? extends T> entities);
 
-    <S extends T> S merge(S entity);
+  <S extends T> S merge(S entity);
 
-    <S extends T> Iterable<S> merge(Iterable<S> entities);
+  <S extends T> Iterable<S> merge(Iterable<S> entities);
 
-    void delete(T t);
+  void delete(T t);
 
-    void delete(Iterable<? extends T> entities);
+  void delete(Iterable<? extends T> entities);
 
-    List<T> findAll();
+  List<T> findAll();
 
-    Optional<T> findOne(ID id);
+  Optional<T> findOne(ID id);
+
+  Optional<T> findOneByQuery(String query, Map<String, Object> parameters);
 }
