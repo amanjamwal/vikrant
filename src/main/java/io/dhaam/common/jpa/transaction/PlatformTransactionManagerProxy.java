@@ -15,25 +15,26 @@ import javax.inject.Provider;
 
 public class PlatformTransactionManagerProxy implements PlatformTransactionManager {
 
-    private Provider<PlatformTransactionManager> target;
+  private Provider<PlatformTransactionManager> target;
 
-    @Inject
-    public void setTarget(Provider<PlatformTransactionManager> target) {
-        this.target = target;
-    }
+  @Inject
+  public void setTarget(Provider<PlatformTransactionManager> target) {
+    this.target = target;
+  }
 
-    @Override
-    public TransactionStatus getTransaction(TransactionDefinition definition) throws TransactionException {
-        return target.get().getTransaction(definition);
-    }
+  @Override
+  public TransactionStatus getTransaction(TransactionDefinition definition)
+      throws TransactionException {
+    return target.get().getTransaction(definition);
+  }
 
-    @Override
-    public void commit(TransactionStatus status) throws TransactionException {
-        target.get().commit(status);
-    }
+  @Override
+  public void commit(TransactionStatus status) throws TransactionException {
+    target.get().commit(status);
+  }
 
-    @Override
-    public void rollback(TransactionStatus status) throws TransactionException {
-        target.get().rollback(status);
-    }
+  @Override
+  public void rollback(TransactionStatus status) throws TransactionException {
+    target.get().rollback(status);
+  }
 }

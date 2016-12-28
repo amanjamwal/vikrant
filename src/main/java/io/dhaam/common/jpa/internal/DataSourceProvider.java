@@ -50,6 +50,7 @@ public class DataSourceProvider implements Provider<DataSource>, Managed {
 
   private ManagedDataSource initializeDataSource(
       Provider<DataSourceFactoryContainer> factoryContainerProvider) {
+
     DataSourceFactoryContainer configuration = factoryContainerProvider.get();
     return configuration.getDatabase().build(metricRegistry, DATA_SOURCE_NAME);
   }

@@ -1,5 +1,7 @@
 package io.dhaam.common.jpa.transaction;
 
+import com.google.inject.persist.Transactional;
+
 import org.springframework.transaction.annotation.AnnotationTransactionAttributeSource;
 import org.springframework.transaction.annotation.SpringTransactionAnnotationParser;
 import org.springframework.transaction.annotation.TransactionAnnotationParser;
@@ -19,12 +21,11 @@ public class CustomAnnotationTransactionAttributeSource
     extends AnnotationTransactionAttributeSource {
 
   private static final boolean guicePersistPresent = ClassUtils.isPresent(
-      "com.google.inject.persist.Transactional",
+      Transactional.class.getName(),
       AnnotationTransactionAttributeSource.class.getClassLoader()
   );
 
   private final boolean allowPublicMethodsOnly;
-
 
   public CustomAnnotationTransactionAttributeSource(boolean allowPublicMethodsOnly) {
     super(getAnnotationParsers());

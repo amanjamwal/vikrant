@@ -7,7 +7,6 @@ import com.codahale.metrics.annotation.Timed;
 import java.util.Optional;
 
 import javax.inject.Inject;
-import javax.inject.Singleton;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -15,6 +14,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.dhaam.common.authentication.Secured;
 import io.dhaam.vikrant.dao.CacheDAO;
 import io.dhaam.vikrant.entity.Tuple;
 
@@ -25,8 +25,8 @@ import io.dhaam.vikrant.entity.Tuple;
 
 @Path("/ping")
 @Produces(MediaType.APPLICATION_JSON)
-@Singleton
 @Transactional
+@Secured
 public class PingResource {
 
   private final CacheDAO cacheDAO;
@@ -35,7 +35,6 @@ public class PingResource {
   public PingResource(CacheDAO cacheDAO) {
     this.cacheDAO = cacheDAO;
   }
-
 
   @GET
   @Timed

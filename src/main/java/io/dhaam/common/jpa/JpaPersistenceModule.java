@@ -1,9 +1,9 @@
 package io.dhaam.common.jpa;
 
+import com.google.common.collect.Sets;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 
-import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.reflections.Reflections;
 import org.reflections.scanners.ResourcesScanner;
 import org.springframework.orm.jpa.EntityManagerHolder;
@@ -17,7 +17,6 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
 
@@ -47,7 +46,7 @@ import static com.google.inject.matcher.Matchers.any;
 @Slf4j
 public class JpaPersistenceModule extends AbstractModule {
 
-  public static final String DEFAULT_NAMING_STRATEGY = "hibernate.ejb.implicit_naming_strategy";
+  public static final String PHYSICAL_NAMING_STRATEGY = "hibernate.physical_naming_strategy";
   private final Set<String> packagesToScan;
   private final Properties jpaProperties;
   private String persistUnitName = "dhaam";
@@ -55,16 +54,13 @@ public class JpaPersistenceModule extends AbstractModule {
   public JpaPersistenceModule(Set<String> packagesToScan) {
     this.packagesToScan = packagesToScan;
     this.jpaProperties = new Properties();
-    this.jpaProperties.put(
-        DEFAULT_NAMING_STRATEGY,
-        ImplicitNamingStrategyJpaCompliantImpl.INSTANCE
-    );
+    this.jpaProperties.put(PHYSICAL_NAMING_STRATEGY, ImprovedNamingStrategy.INSTANCE);
   }
 
   @Override
   protected void configure() {
     bind(DataSource.class).toProvider(DataSourceProvider.class).in(Singleton.class);
-    bindTransactionalAnnotations();
+    bindTransactionalInterceptor();
   }
 
   @Provides
@@ -118,30 +114,29 @@ public class JpaPersistenceModule extends AbstractModule {
   }
 
   @Provides
-  private EntityManager providesEntityManager(
-      Provider<EntityManagerFactory> entityManagerFactoryProvider) {
+  private EntityManager providesEntityManager(Provider<EntityManagerFactory> emFactoryProvider) {
 
-    EntityManagerHolder entityManagerHolder =
-        (EntityManagerHolder) TransactionSynchronizationManager.getResource(
-            entityManagerFactoryProvider.get()
-        );
-
-    if (entityManagerHolder == null) {
-      throw new IllegalStateException("No thread bound entity manager found");
+    if (TransactionSynchronizationManager.hasResource(emFactoryProvider.get())) {
+      EntityManagerHolder entityManagerHolder =
+          (EntityManagerHolder) TransactionSynchronizationManager.getResource(
+              emFactoryProvider.get()
+          );
+      return entityManagerHolder.getEntityManager();
     }
-    return entityManagerHolder.getEntityManager();
+    throw new IllegalStateException("No thread bound entity manager found");
   }
 
-  private void bindTransactionalAnnotations() {
+  private void bindTransactionalInterceptor() {
     PlatformTransactionManagerProxy
         platformTransactionManagerProxy =
         new PlatformTransactionManagerProxy();
 
     bind(PlatformTransactionManagerProxy.class).toInstance(platformTransactionManagerProxy);
 
-    TransactionInterceptor transactionInterceptor =
-        new TransactionInterceptor(platformTransactionManagerProxy,
-            new CustomAnnotationTransactionAttributeSource(false));
+    TransactionInterceptor transactionInterceptor = new TransactionInterceptor(
+        platformTransactionManagerProxy,
+        new CustomAnnotationTransactionAttributeSource(false)
+    );
 
     bindInterceptor(any(), annotatedWith(Transactional.class), transactionInterceptor);
     bindInterceptor(annotatedWith(Transactional.class), any(), transactionInterceptor);
@@ -160,7 +155,7 @@ public class JpaPersistenceModule extends AbstractModule {
   private Collection<String> findMappingFilesIn(Set<String> packagesToScan) {
     log.info("Finding mapping files.");
 
-    Set<String> mappingFiles = new HashSet<>();
+    Set<String> mappingFiles = Sets.newHashSet();
     packagesToScan.forEach(packageToScan ->
         mappingFiles.addAll(getMappingFilesInPackage(packageToScan))
     );

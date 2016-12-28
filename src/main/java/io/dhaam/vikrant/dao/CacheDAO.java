@@ -8,7 +8,7 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.persistence.EntityManager;
 
-import io.dhaam.common.GenericDAO;
+import io.dhaam.common.AbstractDAO;
 import io.dhaam.vikrant.entity.Tuple;
 import lombok.extern.slf4j.Slf4j;
 
@@ -18,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 
 @Slf4j
-public class CacheDAO extends GenericDAO<Tuple, String> {
+public class CacheDAO extends AbstractDAO<Tuple, String> {
 
   @Inject
   public CacheDAO(Provider<EntityManager> entityManagerProvider) {

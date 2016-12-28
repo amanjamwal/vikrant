@@ -5,6 +5,7 @@ import com.google.inject.Stage;
 
 import com.hubspot.dropwizard.guice.GuiceBundle;
 
+import io.dhaam.common.authentication.internal.BasicAuthenticationBundle;
 import io.dhaam.common.jpa.JpaPersistenceModule;
 import io.dhaam.vikrant.entity.Tuple;
 import io.dropwizard.Application;
@@ -30,8 +31,6 @@ public class VikrantApp extends Application<VikrantConfiguration> {
   @Override
   public void initialize(final Bootstrap<VikrantConfiguration> bootstrap) {
 
-    GuiceBundle.Builder<VikrantConfiguration> guiceBundleBuilder = GuiceBundle.newBuilder();
-
     bootstrap.addBundle(new MigrationsBundle<VikrantConfiguration>() {
       @Override
       public DataSourceFactory getDataSourceFactory(VikrantConfiguration vikrantConfiguration) {
@@ -41,14 +40,22 @@ public class VikrantApp extends Application<VikrantConfiguration> {
 
     bootstrap.addBundle(createHibernateBundle());
 
-    bootstrap.addBundle(guiceBundleBuilder
+    bootstrap.addBundle(new BasicAuthenticationBundle());
+
+    bootstrap.addBundle(GuiceBundle.<VikrantConfiguration>newBuilder()
         .setConfigClass(VikrantConfiguration.class)
         .addModule(new VikrantModule())
-        .addModule(new JpaPersistenceModule(Sets.newHashSet("io.dhaam.vikrant")))
-        .enableAutoConfig(getClass().getPackage().getName())
+        .addModule(new JpaPersistenceModule(
+            Sets.newHashSet(
+                "io.dhaam.vikrant",
+                "io.dhaam.common"
+            )
+        ))
+        .enableAutoConfig("io.dhaam.vikrant")
         .build(Stage.DEVELOPMENT));
   }
 
+  @Override
   public void run(VikrantConfiguration vikrantConfiguration, Environment environment)
       throws Exception {
     log.info("Vikrant warming up ...");
