@@ -38,4 +38,4 @@ database:
   password:
 
   # the JDBC URL
-  url: jdbc:mysql://localhost:3306/test?autoReconnect=true&useSSL=false&nullNamePatternMatchesAll=true
+  url: jdbc:mysql://localhost:3306/test?autoReconnect=true&useSSL=false&nullNamePatternMatchesAll=true&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC

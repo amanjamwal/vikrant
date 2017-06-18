@@ -26,11 +26,10 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 
-import io.dhaam.common.jpa.internal.DataSourceProvider;
+import io.dhaam.common.jpa.internal.DatabaseModule;
 import io.dhaam.common.jpa.transaction.CustomAnnotationTransactionAttributeSource;
 import io.dhaam.common.jpa.transaction.PlatformTransactionManagerProxy;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.inject.matcher.Matchers.annotatedWith;
@@ -41,14 +40,13 @@ import static com.google.inject.matcher.Matchers.any;
  * @since 12/13/16
  */
 
-@Setter
 @Getter
 @Slf4j
 public class JpaPersistenceModule extends AbstractModule {
 
   public static final String PHYSICAL_NAMING_STRATEGY = "hibernate.physical_naming_strategy";
   private final Set<String> packagesToScan;
-  private final Properties jpaProperties;
+  private Properties jpaProperties;
   private String persistUnitName = "dhaam";
 
   public JpaPersistenceModule(Set<String> packagesToScan) {
@@ -57,9 +55,14 @@ public class JpaPersistenceModule extends AbstractModule {
     this.jpaProperties.put(PHYSICAL_NAMING_STRATEGY, ImprovedNamingStrategy.INSTANCE);
   }
 
+  public JpaPersistenceModule properties(Properties properties) {
+    this.jpaProperties = properties;
+    return this;
+  }
+
   @Override
   protected void configure() {
-    bind(DataSource.class).toProvider(DataSourceProvider.class).in(Singleton.class);
+    install(new DatabaseModule());
     bindTransactionalInterceptor();
   }
 
